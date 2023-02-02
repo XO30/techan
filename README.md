@@ -1,2 +1,2 @@
 # techan
-library for technical analysis
+library for technical analysis (CandleStickPattern)
