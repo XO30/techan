@@ -1,6 +1,6 @@
 # import
 import numpy as np
-from typing import Optional, List
+from typing import List
 from techan.core.candle_stick import CandleStick
 from techan.core.candle_stick_frame import CandleStickFrame
 from techan.util.param import Parameter
