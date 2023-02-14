@@ -1,5 +1,5 @@
 # import
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # setup
 setup(
@@ -9,7 +9,7 @@ setup(
     url='https://github.com/XO30/techan',
     author='Stefan Siegler',
     author_email='dev@siegler.one',
-    py_modules=['techan'],
+    packages=find_packages(),
     classifiers=[
             'Intended Audience :: Data Scientists',
             'Programming Language :: Python',
