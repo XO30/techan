@@ -1,5 +1,7 @@
 # import
 import numpy as np
+import pandas as pd
+from tqdm import tqdm
 from typing import List
 from techan.core.candle_stick import CandleStick
 from techan.core.candle_stick_frame import CandleStickFrame
@@ -562,7 +564,7 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i, param['trend_window'])
             if is_boolean:
-                result.append(self.Hammer(trend, self.candle_stick_frame[i], param).is_pattern())
+                result.append(self.Hammer(trend, self.candle_stick_frame[i], param).is_pattern)
             else:
                 result.append(self.Hammer(trend, self.candle_stick_frame[i], param))
         return result
@@ -575,7 +577,7 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
             if is_boolean:
-                result.append(self.Piercing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern())
+                result.append(self.Piercing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
                 result.append(self.Piercing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
@@ -588,7 +590,7 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
             if is_boolean:
-                result.append(self.BullishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern())
+                result.append(self.BullishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
                 result.append(self.BullishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
@@ -602,7 +604,7 @@ class CandleStickPattern:
             trend = self.trend(i-2, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.MorningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern())
+                result.append(self.MorningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
                 result.append(self.MorningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
@@ -616,7 +618,7 @@ class CandleStickPattern:
             trend = self.trend(i-2, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.ThreeWhiteSoldiers(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern())
+                result.append(self.ThreeWhiteSoldiers(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
                 result.append(self.ThreeWhiteSoldiers(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
@@ -630,7 +632,7 @@ class CandleStickPattern:
             trend = self.trend(i, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.BullishMarubozu(trend, relative_size, self.candle_stick_frame[i], param).is_pattern())
+                result.append(self.BullishMarubozu(trend, relative_size, self.candle_stick_frame[i], param).is_pattern)
             else:
                 result.append(self.BullishMarubozu(trend, relative_size, self.candle_stick_frame[i], param))
         return result
@@ -644,7 +646,7 @@ class CandleStickPattern:
             trend = self.trend(i-2, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.ThreeInsideUp(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern())
+                result.append(self.ThreeInsideUp(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
                 result.append(self.ThreeInsideUp(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
@@ -658,7 +660,7 @@ class CandleStickPattern:
             trend = self.trend(i-1, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.BullishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern())
+                result.append(self.BullishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
                 result.append(self.BullishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
@@ -672,7 +674,7 @@ class CandleStickPattern:
             trend = self.trend(i, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.TweezerBottom(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern())
+                result.append(self.TweezerBottom(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
                 result.append(self.TweezerBottom(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
@@ -687,7 +689,7 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i, param['trend_window'])
             if is_boolean:
-                result.append(self.HangingMan(trend, self.candle_stick_frame[i], param).is_pattern())
+                result.append(self.HangingMan(trend, self.candle_stick_frame[i], param).is_pattern)
             else:
                 result.append(self.HangingMan(trend, self.candle_stick_frame[i], param))
         return result
@@ -700,7 +702,7 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
             if is_boolean:
-                result.append(self.DarkCloud(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern())
+                result.append(self.DarkCloud(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
                 result.append(self.DarkCloud(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
@@ -713,7 +715,7 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
             if is_boolean:
-                result.append(self.BearishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern())
+                result.append(self.BearishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
                 result.append(self.BearishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
@@ -727,7 +729,7 @@ class CandleStickPattern:
             trend = self.trend(i-1, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.EveningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern())
+                result.append(self.EveningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
                 result.append(self.EveningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
@@ -741,7 +743,7 @@ class CandleStickPattern:
             trend = self.trend(i-1, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.ThreeBlackCrows(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern())
+                result.append(self.ThreeBlackCrows(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
                 result.append(self.ThreeBlackCrows(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
@@ -755,7 +757,7 @@ class CandleStickPattern:
             trend = self.trend(i-1, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.BearishMarubozu(trend, relative_size, self.candle_stick_frame[i], param).is_pattern())
+                result.append(self.BearishMarubozu(trend, relative_size, self.candle_stick_frame[i], param).is_pattern)
             else:
                 result.append(self.BearishMarubozu(trend, relative_size, self.candle_stick_frame[i], param))
         return result
@@ -769,7 +771,7 @@ class CandleStickPattern:
             trend = self.trend(i-1, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.ThreeInsideDown(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern())
+                result.append(self.ThreeInsideDown(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
                 result.append(self.ThreeInsideDown(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
@@ -783,7 +785,7 @@ class CandleStickPattern:
             trend = self.trend(i-1, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.BearishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern())
+                result.append(self.BearishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
                 result.append(self.BearishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
@@ -797,7 +799,57 @@ class CandleStickPattern:
             trend = self.trend(i-1, param['trend_window'])
             relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.TweezerTop(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern())
+                result.append(self.TweezerTop(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
                 result.append(self.TweezerTop(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
+        return result
+
+    def find(self, type: str = 'all', is_boolean: bool = True) -> pd.DataFrame:
+        """
+        Find candle stick pattern
+        :param type: str: 'all', 'bullish' or 'bearish' (default: 'all')
+        :param is_boolean: Boolean: True or False (default: True)
+        :return: pd.DataFrame: DataFrame of candle stick pattern
+        """
+        if type not in ['all', 'bullish', 'bearish']:
+            raise Exception('Invalid type: type must be "all", "bullish" or "bearish"')
+        pattern_dict = {
+            'bullish': {
+                'hammer': self.is_hammer,
+                'piercing': self.is_piercing,
+                'bullish_engulfing': self.is_bullish_engulfing,
+                'mornin_star': self.is_morning_star,
+                'three_white_soldiers': self.is_three_white_soldiers,
+                'bullish_maru_bozu': self.is_bullish_marubozu,
+                'three_inside_up': self.is_three_inside_up,
+                'bullish_harami': self.is_bullish_harami,
+                'tweezer_bottom': self.is_tweezer_bottom,
+            },
+            'bearish': {
+                'hanging_man': self.is_hanging_man,
+                'dark_cloud': self.is_dark_cloud,
+                'bearish_engulfing': self.is_bearish_engulfing,
+                'evening_star': self.is_evening_star,
+                'three_black_crows': self.is_three_black_crows,
+                'bearish_marubozu': self.is_bearish_marubozu,
+                'three_inside_down': self.is_three_inside_down,
+                'bearish_harami': self.is_bearish_harami,
+                'tweezer_top': self.is_tweezer_top,
+            }
+        }
+        if type == 'all':
+            pattern_list = list(pattern_dict['bullish'].values()) + list(pattern_dict['bearish'].values())
+            columns = list(pattern_dict['bullish'].keys()) + list(pattern_dict['bearish'].keys())
+        elif type == 'bullish':
+            pattern_list = list(pattern_dict['bullish'].values())
+            columns = list(pattern_dict['bullish'].keys())
+        elif type == 'bearish':
+            pattern_list = list(pattern_dict['bearish'].values())
+            columns = list(pattern_dict['bearish'].keys())
+        result = []
+        for pattern in tqdm(pattern_list, desc='Finding Candle Stick Pattern'):
+            result.append(pattern(is_boolean=is_boolean))
+        result = pd.DataFrame(result).T
+        result.columns = columns
+        result.reset_index(drop=True, inplace=True)
         return result
