@@ -6,11 +6,11 @@ from techan.core.candle_stick import CandleStick
 
 
 class CandleStickFrame:
-    def __init__(self, date_time: list, open: list, high: list, low: list, close: list, volume: list = None):
+    def __init__(self, date_time: list, open: list, high: list, low: list, close: list, volume: list or None = None):
         date_time, open, high, low, close, volume = self._validate_input(date_time, open, high, low, close, volume)
         self.candle_sticks = [CandleStick(dt, o, h, l, c, v) for dt, o, h, l, c, v in
                               zip(date_time, open, high, low, close, volume)]
-        self.df = pd.DataFrame({"open": open, "high": high, "low": low, "close": close})
+        self.df: pd.DataFrame = pd.DataFrame({"date_time": date_time, "open": open, "high": high, "low": low, "close": close, "volume": volume})
         self._bullish_count, self._bearish_count, self._doji_count = self._type_count()
 
     def __repr__(self):
@@ -32,7 +32,7 @@ class CandleStickFrame:
         return reversed(self.candle_sticks)
 
     @staticmethod
-    def _validate_input(date_time: list, open: list, high: list, low: list, close: list, volume: list) -> tuple:
+    def _validate_input(date_time: list, open: list, high: list, low: list, close: list, volume: list or None) -> tuple:
         """
         method to validate the input
         :param date_time: list, np.ndarray, or pd.Series of date_time of the candlesticks
@@ -82,9 +82,9 @@ class CandleStickFrame:
         method to count the number of bullish, bearish, and doji candlesticks
         :return: tuple: bullish, bearish, doji count
         """
-        bullish = 0
-        bearish = 0
-        doji = 0
+        bullish: int = 0
+        bearish: int = 0
+        doji: int = 0
         for candle in self.candle_sticks:
             if candle.type() == 'bullish':
                 bullish += 1
