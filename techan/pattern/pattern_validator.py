@@ -11,14 +11,14 @@ class PatternValidator:
         self.future_window: int = future_window
 
     def get_past_high_low(self, index: int) -> (float, float) or (None, None):
-        window: list or None = self.candle_stick_frame[index-self.past_window:index] if index > self.past_window else None
+        window: list or None = self.candle_stick_frame[index-self.past_window+1:index+1] if index > self.past_window else None
         if window is not None:
             return max(candle_stick.high for candle_stick in window), min(candle_stick.low for candle_stick in window)
         else:
             return None, None
 
     def get_future_high_low(self, index: int) -> (float, float) or (None, None):
-        window: list or None = self.candle_stick_frame[index:index+self.future_window] if index < len(self.candle_stick_frame)-self.future_window else None
+        window: list or None = self.candle_stick_frame[index+1:index+self.future_window + 1] if index < len(self.candle_stick_frame)-self.future_window else None
         if window is not None:
             return max(candle_stick.high for candle_stick in window), min(candle_stick.low for candle_stick in window)
         else:
@@ -27,6 +27,8 @@ class PatternValidator:
     def _validate(self, cs_pattern: any, past_high: float, past_low: float, future_high: float, future_low: float) -> bool:
         if cs_pattern.pattern_type == 'bullish':
             if future_high >= past_high and future_low >= past_low:
+                if cs_pattern.pattern[-1].low == past_low:
+                    pass # the sl is at the low of the pattern
                 cs_pattern.is_valid = True
                 return True
             else:
@@ -34,6 +36,8 @@ class PatternValidator:
                 return False
         elif cs_pattern.pattern_type == 'bearish':
             if future_high <= past_high and future_low <= past_low:
+                if cs_pattern.pattern[-1].high == past_high:
+                    pass # the sl is at the high of the pattern
                 cs_pattern.is_valid = True
                 return True
             else:
