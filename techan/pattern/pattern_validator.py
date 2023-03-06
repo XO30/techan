@@ -1,4 +1,5 @@
 from techan.core.candle_stick_frame import CandleStickFrame
+from tqdm import tqdm
 import pandas as pd
 
 
@@ -17,44 +18,56 @@ class PatternValidator:
         else:
             return None, None
 
-    def get_future_high_low(self, index: int) -> (float, float) or (None, None):
+    def get_future_window(self, index: int) -> list or None:
         window: list or None = self.candle_stick_frame[index+1:index+self.future_window + 1] if index < len(self.candle_stick_frame)-self.future_window else None
         if window is not None:
-            return max(candle_stick.high for candle_stick in window), min(candle_stick.low for candle_stick in window)
+            return window
         else:
-            return None, None
+            return None
 
-    def _validate(self, cs_pattern: any, past_high: float, past_low: float, future_high: float, future_low: float) -> bool:
+    def _validate(self, cs_pattern: any, past_high: float, past_low: float, future_window: list) -> bool:
+        is_valid: bool = False
+        is_invalid: bool = False
         if cs_pattern.pattern_type == 'bullish':
-            if future_high >= past_high and future_low >= past_low:
-                if cs_pattern.pattern[-1].low == past_low:
-                    pass # the sl is at the low of the pattern
-                cs_pattern.is_valid = True
-                return True
-            else:
-                cs_pattern.is_valid = False
-                return False
+            if cs_pattern.pattern[-1].low == past_low:
+                pass  # the sl is at the low of the pattern
+            for candle_stick in future_window:
+                if candle_stick.high >= past_high:
+                    is_valid = True
+                if candle_stick.low <= past_low:
+                    is_invalid = True
+                if is_valid:
+                    cs_pattern.is_valid = True
+                    return True
+                elif is_invalid:
+                    cs_pattern.is_valid = False
+                    return False
         elif cs_pattern.pattern_type == 'bearish':
-            if future_high <= past_high and future_low <= past_low:
-                if cs_pattern.pattern[-1].high == past_high:
-                    pass # the sl is at the high of the pattern
-                cs_pattern.is_valid = True
-                return True
-            else:
-                cs_pattern.is_valid = False
-                return False
+            if cs_pattern.pattern[-1].high == past_high:
+                pass  # the sl is at the high of the pattern
+            for candle_stick in future_window:
+                if candle_stick.high >= past_high:
+                    is_invalid = True
+                if candle_stick.low <= past_low:
+                    is_valid = True
+                if is_valid:
+                    cs_pattern.is_valid = True
+                    return True
+                elif is_invalid:
+                    cs_pattern.is_valid = False
+                    return False
         else:
             cs_pattern.is_valid = None
             return False # tbd
 
     def validate(self):
-        for index, row in self.pattern_df.iterrows():
+        for index, row in tqdm(self.pattern_df.iterrows()):
             for pattern in self.pattern_df.columns:
                 if self.pattern_df.loc[index, pattern].is_pattern:
                     past_high, past_low = self.get_past_high_low(index)
-                    future_high, future_low = self.get_future_high_low(index)
-                    if past_high is not None and past_low is not None and future_high is not None and future_low is not None:
-                        if self._validate(self.pattern_df.loc[index, pattern], past_high, past_low, future_high, future_low):
+                    future_window = self.get_future_window(index)
+                    if past_high is not None and past_low is not None and future_window is not None:
+                        if self._validate(self.pattern_df.loc[index, pattern], past_high, past_low, future_window):
                             self.validation_df.loc[index, pattern] = True
                         else:
                             self.validation_df.loc[index, pattern] = False

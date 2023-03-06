@@ -1,4 +1,6 @@
 from techan import CandleStickFrame
+import numpy as np
+import math
 
 
 class Time:
