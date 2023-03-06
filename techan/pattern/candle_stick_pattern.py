@@ -158,6 +158,7 @@ class CandleStickPattern:
             return f'{self.pattern_name} -> ({self.is_pattern})'
 
 
+
     # Bullish Reversal Candlestick Patterns classes:
     # Hammer (1)
     class Hammer(PatternTemplate):

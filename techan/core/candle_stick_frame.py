@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from techan.core.candle_stick import CandleStick
+import plotly.graph_objects as go
 
 
 class CandleStickFrame:
@@ -124,3 +125,16 @@ class CandleStickFrame:
                                                                        self._bearish_ratio(),
                                                                        self._doji_ratio()
                                                                        )
+
+    def plot(self) -> None:
+        """
+        method to plot a candlestick chart
+        :return: None, plotly candlestick chart
+        """
+        fig = go.Figure(data=[go.Candlestick(x=self.df['date_time'],
+                                             open=self.df['open'],
+                                             high=self.df['high'],
+                                             low=self.df['low'],
+                                             close=self.df['close'])])
+        fig.show()
+        return None
