@@ -25,6 +25,9 @@ setup(
             'pandas',
             'datetime',
             'typing',
+            'plotly',
+            'tqdm',
+            'math'
         ],
     python_requires='>3.5, <4',
 )
