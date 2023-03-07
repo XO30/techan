@@ -5,13 +5,13 @@ from datetime import datetime
 
 # noinspection PyPropertyDefinition
 class CandleStick:
-    def __init__(self, date_time: str, open: float, high: float, low: float, close: float, volume: int = None):
-        self.open = open
-        self.high = high
-        self.low = low
-        self.close = close
-        self.date_time = date_time
-        self.volume = volume
+    def __init__(self, date_time: str, open: float, high: float, low: float, close: float, volume: int or None = None):
+        self.open: float = open
+        self.high: float = high
+        self.low: float = low
+        self.close: float = close
+        self.date_time: str = date_time
+        self.volume: int or None = volume
         self._validate_candle()
 
     def __repr__(self):
@@ -61,7 +61,7 @@ class CandleStick:
         return self._close
 
     @property
-    def volume(self) -> int:
+    def volume(self) -> int or None:
         """
         forwards the open Volume of the candlestick
         :return: int: Volume
@@ -77,7 +77,7 @@ class CandleStick:
         """
         if not isinstance(value, (str, datetime)):
             raise TypeError("date_time must be str or datetime not {}".format(type(value)))
-        self._date_time = value
+        self._date_time: str = value
         return None
 
     @open.setter
@@ -91,7 +91,7 @@ class CandleStick:
             raise TypeError("open must be int or float not {}".format(type(value)))
         if value < 0:
             raise ValueError("open must be positive")
-        self._open = value
+        self._open: float = value
         return None
 
     @high.setter
@@ -105,7 +105,7 @@ class CandleStick:
             raise TypeError("high must be int or float not {}".format(type(value)))
         if value < 0:
             raise ValueError("high must be positive")
-        self._high = value
+        self._high: float = value
         return None
 
     @low.setter
@@ -119,7 +119,7 @@ class CandleStick:
             raise TypeError("low must be int or float not {}".format(type(value)))
         if value < 0:
             raise ValueError("Low must be positive")
-        self._low = value
+        self._low: float = value
         return None
 
     @close.setter
@@ -133,7 +133,7 @@ class CandleStick:
             raise TypeError("close must be int or float not {}".format(type(value)))
         if value < 0:
             raise ValueError("close must be positive")
-        self._close = value
+        self._close: float = value
         return None
 
     @volume.setter
@@ -148,7 +148,7 @@ class CandleStick:
         if value is not None:
             if value < 0:
                 raise ValueError("volume must be positive")
-        self._volume = value
+        self._volume: int or None = value
         return None
 
     def _validate_candle(self) -> None:
@@ -258,8 +258,8 @@ class CandleStick:
         -1 = body totally at the bottom of cs, 0 = middle, 1 = body totally at the top of cs
         :return: float: position of the body, range [-1, 1]
         """
-        upper_shadow = self.high - max(self.open, self.close)
-        lower_shadow = min(self.open, self.close) - self.low
-        shadows = upper_shadow + lower_shadow
+        upper_shadow: float = self.high - max(self.open, self.close)
+        lower_shadow: float = min(self.open, self.close) - self.low
+        shadows: float = upper_shadow + lower_shadow
         # -1 = lower shadow, 0 = middle, 1 = upper shadow
         return (2 * lower_shadow) / shadows - 1 if shadows != 0 else 0
