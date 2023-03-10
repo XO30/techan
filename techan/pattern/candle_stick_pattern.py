@@ -148,8 +148,10 @@ class CandleStickPattern:
             self.pattern_type = pattern_type
             self.trend_strength = trend_strength
             self.pattern = pattern
-            self.is_pattern = False
+            self.is_pattern = None
             self.is_valid = None
+            self.sl = None
+            self.tp = None
 
         def __str__(self):
             return f'{self.pattern_name} -> ({self.is_pattern})'
@@ -894,7 +896,7 @@ class CandleStickPattern:
                 result.append(self.TweezerTop(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
 
-    def find(self, type: str = 'all', is_boolean: bool = True) -> pd.DataFrame:
+    def find(self, type: str = 'all', is_boolean: bool = False) -> pd.DataFrame:
         """
         Find candle stick pattern
         :param type: str: 'all', 'bullish' or 'bearish' (default: 'all')
