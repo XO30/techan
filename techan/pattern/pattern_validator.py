@@ -49,6 +49,8 @@ class PatternValidator:
                     is_valid = True
                 if candle_stick.low <= past_low:
                     is_invalid = True
+                cs_pattern.tp = past_high
+                cs_pattern.sl = past_low
                 if is_valid:
                     cs_pattern.is_valid = True
                     # print(past_high - cs_pattern.pattern[-1].close)
@@ -74,6 +76,8 @@ class PatternValidator:
                     is_invalid = True
                 if candle_stick.low <= past_low:
                     is_valid = True
+                cs_pattern.tp = past_low
+                cs_pattern.sl = past_high
                 if is_valid:
                     cs_pattern.is_valid = True
                     # print(cs_pattern.pattern[-1].close - past_low)
