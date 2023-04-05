@@ -1,16 +1,16 @@
 # import
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from typing import List
 from techan.core.candle_stick import CandleStick
 from techan.core.candle_stick_frame import CandleStickFrame
 from techan.util.param import Parameter
+from techan.util.scaler import StandardScaler
 
 
 class CandleStickPattern:
     def __init__(self, candle_stick_frame: CandleStickFrame):
         self.candle_stick_frame = self._validate_csf(candle_stick_frame)
+        self._scaler = StandardScaler([cs.cs_size() for cs in self.candle_stick_frame])
 
     @staticmethod
     def _validate_csf(candle_stick_frame: CandleStickFrame):
@@ -38,88 +38,6 @@ class CandleStickPattern:
             raise ValueError("window must be less than or equal to the length of the candle stick frame")
         return self.candle_stick_frame[index-window:index]
 
-    def z_score_cs(self, index: int, window: int = 10) -> None or List[float]:
-        """
-        method to calculate the z score of the candle sticks in the window
-        cs size normal scaled in respect to the cs of the candle sticks in the window
-        can be in range [-inf, inf] with a mean of 0 and standard deviation of 1
-        :param index: int: index of the candle stick to calculate the z score of
-        :param window: int: window to calculate the z score over
-        :return: list of float or None: z score of the candle sticks of the window [-inf, inf]
-        """
-        cs_window = self._prepare_window(index, window)
-        if len(cs_window) < window or index < 0:
-            return None
-        else:
-            mean = np.mean([cs.cs_size() for cs in cs_window])
-            std = np.std([cs.cs_size() for cs in cs_window])
-            # cs size normal scaled in respect to the cs of the candle sticks in the window
-            scaled_cs = list(map(lambda cs: (cs.cs_size() - mean) / std, cs_window))
-            return scaled_cs
-
-    def z_score_body(self, index: int, window: int = 11) -> None or List[float]:
-        """
-        method to calculate the z score of the bodies in the window
-        body size normal scaled in respect to the bodies of the candle sticks in the window
-        can be in range [-inf, inf] with a mean of 0 and standard deviation of 1
-        :param index: int: index of the candle stick to calculate the z score of
-        :param window: int: window to calculate the z score over
-        :return: list of float or None: z score of the bodies of the window [-inf, inf]
-        """
-        # the current cs should be included in the window -> += 1
-        index += 1
-        cs_window = self._prepare_window(index, window)
-        if len(cs_window) < window or index < 0:
-            return None
-        else:
-            mean = np.mean([cs.body_size() for cs in cs_window])
-            std = np.std([cs.body_size() for cs in cs_window])
-            # body size normal scaled in respect to the bodies of the candle sticks in the window
-            scaled_bodies = list(map(lambda cs: (cs.body_size() - mean) / std, cs_window))
-            return scaled_bodies
-
-    def min_max_cs(self, index: int, window: int = 11) -> None or List[float]:
-        """
-        method to calculate the min max of the candle sticks in the window
-        cs size min max scaled in respect to the cs of the candle sticks in the window
-        can be in range [0, 1]
-        :param index: int: index of the candle stick to calculate the min max of
-        :param window: int: window to calculate the min max over
-        :return: list of float or None: min max of the candle sticks in the window [0, 1]
-        """
-        # the current cs should be included in the window -> += 1
-        index += 1
-        cs_window = self._prepare_window(index, window)
-        if len(cs_window) < window or index < 0:
-            return None
-        else:
-            min = np.min([cs.cs_size() for cs in cs_window])
-            max = np.max([cs.cs_size() for cs in cs_window])
-            # cs size min max scaled in respect to the cs of the candle sticks in the window
-            scaled_cs = list(map(lambda cs: (cs.cs_size() - min) / (max - min), cs_window))
-            return scaled_cs
-
-    def min_max_body(self, index: int, window: int = 11) -> None or List[float]:
-        """
-        method to calculate the min max of the bodies in the window
-        body size min max scaled in respect to the bodies of the candle sticks in the window
-        can be in range [0, 1]
-        :param index: int: index of the candle stick to calculate the min max of
-        :param window: int: window to calculate the min max over
-        :return: list of float or None: min max of the bodies in the Window [0, 1]
-        """
-        # the current cs should be included in the window -> += 1
-        index += 1
-        cs_window = self._prepare_window(index, window)
-        if len(cs_window) < window or index < 0:
-            return None
-        else:
-            min = np.min([cs.body_size() for cs in cs_window])
-            max = np.max([cs.body_size() for cs in cs_window])
-            # body size min max scaled in respect to the bodies of the candle sticks in the window
-            scaled_bodies = list(map(lambda cs: (cs.body_size() - min) / (max - min), cs_window))
-            return scaled_bodies
-
     def trend(self, index: int, window: int = 10) -> None or float:
         """
         method to calculate the trend of the candle stick at index
@@ -142,8 +60,9 @@ class CandleStickPattern:
         return trend / sum
 
     class PatternTemplate:
-        def __init__(self, param: dict, pattern_name: str, pattern_type: str, trend_strength: float, pattern: list):
+        def __init__(self, param: dict, scaler: any, pattern_name: str, pattern_type: str, trend_strength: float, pattern: list):
             self.param = param
+            self.scaler = scaler
             self.pattern_name = pattern_name
             self.pattern_type = pattern_type
             self.trend_strength = trend_strength
@@ -166,8 +85,8 @@ class CandleStickPattern:
     # Bullish Reversal Candlestick Patterns classes:
     # Hammer (1)
     class Hammer(PatternTemplate):
-        def __init__(self, trend: float, cs: CandleStick, param: dict):
-            super().__init__(param, 'Hammer', 'bullish', trend, [cs])
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, param: dict):
+            super().__init__(param, scaler, 'Hammer', 'bullish', trend, [cs])
             self._cs = cs
             self.is_pattern = self._is_hammer()
 
@@ -189,8 +108,8 @@ class CandleStickPattern:
 
     # Bullish Piercing (2)
     class Piercing(PatternTemplate):
-        def __init__(self, trend: float, cs: CandleStick, cs_m1: CandleStick, param: dict):
-            super().__init__(param, 'Piercing', 'bullish', trend, [cs_m1, cs])
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, param: dict):
+            super().__init__(param, scaler, 'Piercing', 'bullish', trend, [cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self.is_pattern = self._is_piercing()
@@ -213,8 +132,8 @@ class CandleStickPattern:
 
     # Bullish Engulfing (3)
     class BullishEngulfing(PatternTemplate):
-        def __init__(self, trend: float, cs: CandleStick, cs_m1: CandleStick, param: dict):
-            super().__init__(param, 'BullishEngulfing', 'bullish', trend, [cs_m1, cs])
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, param: dict):
+            super().__init__(param, scaler, 'BullishEngulfing', 'bullish', trend, [cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self.is_pattern = self._is_bullish_engulfing()
@@ -237,9 +156,8 @@ class CandleStickPattern:
 
     # Morning Star (4)
     class MorningStar(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
-            super().__init__(param, 'MorningStar', 'bullish', trend, [cs_m2, cs_m1, cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
+            super().__init__(param, scaler, 'MorningStar', 'bullish', trend, [cs_m2, cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self._cs_m2 = cs_m2
@@ -255,20 +173,19 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength <= self.param['trend_strength']
             con_02: bool = self._cs_m2.type() == 'bearish'
             con_03: bool = self._cs_m2.cs_body_ratio() >= self.param['cs_m2_body_ratio']
-            con_04: bool = self._relative_size[-3] >= self.param['cs_m2_relative_size']
+            con_04: bool = self.scaler(self._cs_m2.cs_size()) >= self.param['cs_m2_relative_size']
             con_05: bool = self._cs_m1.cs_body_ratio() <= self.param['cs_m1_body_ratio']
             con_06: bool = self._cs.type() == 'bullish'
             con_07: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_08: bool = self._relative_size[-1] >= self.param['cs_relative_size']
+            con_08: bool = self.scaler(self._cs.cs_size()) >= self.param['cs_relative_size']
             if con_01 and con_02 and con_03 and con_04 and con_05 and con_06 and con_07 and con_08:
                 return True
             return False
 
     # Three White Soldiers (5)
     class ThreeWhiteSoldiers(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
-            super().__init__(param, 'ThreeWhiteSoldiers', 'bullish', trend, [cs_m2, cs_m1, cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
+            super().__init__(param, scaler, 'ThreeWhiteSoldiers', 'bullish', trend, [cs_m2, cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self._cs_m2 = cs_m2
@@ -284,22 +201,21 @@ class CandleStickPattern:
             con_1: bool = self.trend_strength <= self.param['trend_strength']
             con_2: bool = self._cs_m2.type() == 'bullish'
             con_3: bool = self._cs_m2.cs_body_ratio() >= self.param['cs_m2_body_ratio']
-            con_4: bool = self._relative_size[-3] >= self.param['cs_m2_relative_size']
+            con_4: bool = self.scaler(self._cs_m2.cs_size()) >= self.param['cs_m2_relative_size']
             con_5: bool = self._cs_m1.type() == 'bullish'
             con_6: bool = self._cs_m1.cs_body_ratio() >= self.param['cs_m1_body_ratio']
-            con_7: bool = self._relative_size[-2] >= self.param['cs_m1_relative_size']
+            con_7: bool = self.scaler(self._cs_m1.cs_size()) >= self.param['cs_m1_relative_size']
             con_8: bool = self._cs.type() == 'bullish'
             con_9: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_10: bool = self._relative_size[-1] >= self.param['cs_relative_size']
+            con_10: bool = self.scaler(self._cs.cs_size()) >= self.param['cs_relative_size']
             if con_1 and con_2 and con_3 and con_4 and con_5 and con_6 and con_7 and con_8 and con_9 and con_10:
                 return True
             return False
 
     # Bullish Marubozu (6)
     class BullishMarubozu(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, param: dict):
-            super().__init__(param, 'BullishMarubozu', 'bullish', trend, [cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, param: dict):
+            super().__init__(param, scaler, 'BullishMarubozu', 'bullish', trend, [cs])
             self._cs = cs
             self.is_pattern = self._is_bullish_marubozu()
 
@@ -313,16 +229,15 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength <= self.param['trend_strength']
             con_02: bool = self._cs.type() == 'bullish'
             con_03: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_04: bool = self._relative_size[-1] >= self.param['cs_relative_size']
+            con_04: bool = self.scaler(self._cs.cs_size()) >= self.param['cs_relative_size']
             if con_01 and con_02 and con_03 and con_04:
                 return True
             return False
 
     # Three Inside Up (7)
     class ThreeInsideUp(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
-            super().__init__(param, 'ThreeInsideUp', 'bullish', trend, [cs_m2, cs_m1, cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
+            super().__init__(param, scaler, 'ThreeInsideUp', 'bullish', trend, [cs_m2, cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self._cs_m2 = cs_m2
@@ -338,12 +253,12 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength <= self.param['trend_strength']
             con_02: bool = self._cs_m2.type() == 'bearish'
             con_03: bool = self._cs_m2.cs_body_ratio() >= self.param['cs_m2_body_ratio']
-            con_04: bool = self._relative_size[-3] >= self.param['cs_m2_relative_size']
+            con_04: bool = self.scaler(self._cs_m2.cs_size()) >= self.param['cs_m2_relative_size']
             con_05: bool = self._cs_m1.type() == 'bullish'
             con_06: bool = self._cs_m1.open <= self._cs_m2.close
             con_07: bool = self._cs.type() == 'bullish'
             con_08: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_09: bool = self._relative_size[-1] >= self.param['cs_relative_size']
+            con_09: bool = self.scaler(self._cs.cs_size()) >= self.param['cs_relative_size']
             con_10: bool = self._cs.open >= self._cs_m1.close
             if con_01 and con_02 and con_03 and con_04 and con_05 and con_06 and con_07 and con_08 and con_09 and con_10:
                 return True
@@ -351,9 +266,8 @@ class CandleStickPattern:
 
     # Bullish Harami (8)
     class BullishHarami(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, param: dict):
-            super().__init__(param, 'BullishHarami', 'bullish', trend, [cs_m1, cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, param: dict):
+            super().__init__(param, scaler, 'BullishHarami', 'bullish', trend, [cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self.is_pattern = self._is_bullish_harami()
@@ -368,10 +282,10 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength <= self.param['trend_strength']
             con_02: bool = self._cs_m1.type() == 'bearish'
             con_03: bool = self._cs_m1.cs_body_ratio() >= self.param['cs_m1_body_ratio']
-            con_04: bool = self._relative_size[-2] >= self.param['cs_m1_relative_size']
+            con_04: bool = self.scaler(self._cs_m1.cs_size()) >= self.param['cs_m1_relative_size']
             con_05: bool = self._cs.type() == 'bullish'
             con_06: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_07: bool = self._relative_size[-1] <= self.param['cs_relative_size']
+            con_07: bool = self.scaler(self._cs.cs_size()) <= self.param['cs_relative_size']
             con_08: bool = self._cs.open >= self._cs_m1.close
             con_09: bool = self._cs.close <= self._cs_m1.open
             if con_01 and con_02 and con_03 and con_04 and con_05 and con_06 and con_07 and con_08 and con_09:
@@ -380,9 +294,8 @@ class CandleStickPattern:
 
     # Tweezer Bottom (9)
     class TweezerBottom(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, param: dict):
-            super().__init__(param, 'TweezerBottom', 'bullish', trend, [cs, cs_m1])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, param: dict):
+            super().__init__(param, scaler, 'TweezerBottom', 'bullish', trend, [cs, cs_m1])
             self._cs = cs
             self._cs_m1 = cs_m1
             self.is_pattern = self._is_tweezer_bottom()
@@ -397,7 +310,7 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength <= self.param['trend_strength']
             con_02: bool = self._cs_m1.type() == 'bearish'
             con_03: bool = self._cs_m1.cs_body_ratio() >= self.param['cs_m1_body_ratio']
-            con_04: bool = self._relative_size[-2] >= self.param['cs_m1_relative_size']
+            con_04: bool = self.scaler(self._cs_m1.cs_size()) >= self.param['cs_m1_relative_size']
             con_05: bool = self._cs.type() == 'bullish'
             con_06: bool = self._cs.cs_body_ratio() <= self.param['cs_body_ratio']
             con_07: bool = self._cs.body_position() <= self.param['cs_body_position']
@@ -409,8 +322,8 @@ class CandleStickPattern:
     # Bearish Reversal Candlestick Patterns Classes:
     # Hanging Man (14)
     class HangingMan(PatternTemplate):
-        def __init__(self, trend: float, cs: CandleStick, param: dict):
-            super().__init__(param, 'HangingMan', 'bearish', trend, [cs])
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, param: dict):
+            super().__init__(param, scaler, 'HangingMan', 'bearish', trend, [cs])
             self._cs = cs
             self.is_pattern = self._is_hanging_man()
 
@@ -432,8 +345,8 @@ class CandleStickPattern:
 
     # Dark Cloud (15)
     class DarkCloud(PatternTemplate):
-        def __init__(self, trend: float, cs: CandleStick, cs_m1: CandleStick, param: dict):
-            super().__init__(param, 'DarkCloud', 'bearish', trend, [cs_m1, cs])
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, param: dict):
+            super().__init__(param, scaler, 'DarkCloud', 'bearish', trend, [cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self.is_pattern = self._is_dark_cloud()
@@ -456,8 +369,8 @@ class CandleStickPattern:
 
     # Bearish Engulfing (16)
     class BearishEngulfing(PatternTemplate):
-        def __init__(self, trend: float, cs: CandleStick, cs_m1: CandleStick, param: dict):
-            super().__init__(param, 'BearishEngulfing', 'bearish', trend, [cs_m1, cs])
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, param: dict):
+            super().__init__(param, scaler, 'BearishEngulfing', 'bearish', trend, [cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self.is_pattern = self._is_bearish_engulfing()
@@ -480,9 +393,8 @@ class CandleStickPattern:
 
     # Evening Star (17)
     class EveningStar(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
-            super().__init__(param, 'EveningStar', 'bearish', trend, [cs_m2, cs_m1, cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
+            super().__init__(param, scaler, 'EveningStar', 'bearish', trend, [cs_m2, cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self._cs_m2 = cs_m2
@@ -498,20 +410,19 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength >= self.param['trend_strength']
             con_02: bool = self._cs_m2.type() == 'bullish'
             con_03: bool = self._cs_m2.cs_body_ratio() >= self.param['cs_m2_body_ratio']
-            con_04: bool = self._relative_size[-3] >= self.param['cs_m2_relative_size']
+            con_04: bool = self.scaler(self._cs_m2.cs_size()) >= self.param['cs_m2_relative_size']
             con_05: bool = self._cs_m1.cs_body_ratio() <= self.param['cs_m1_body_ratio']
             con_06: bool = self._cs.type() == 'bearish'
             con_07: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_08: bool = self._relative_size[-1] >= self.param['cs_relative_size']
+            con_08: bool = self.scaler(self._cs.cs_size()) >= self.param['cs_relative_size']
             if con_01 and con_02 and con_03 and con_04 and con_05 and con_06 and con_07 and con_08:
                 return True
             return False
 
     # Three Black Crows (18)
     class ThreeBlackCrows(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
-            super().__init__(param, 'ThreeBlackCrows', 'bearish', trend, [cs_m2, cs_m1, cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
+            super().__init__(param, scaler, 'ThreeBlackCrows', 'bearish', trend, [cs_m2, cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self._cs_m2 = cs_m2
@@ -527,22 +438,21 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength >= self.param['trend_strength']
             con_02: bool = self._cs_m2.type() == 'bearish'
             con_03: bool = self._cs_m2.cs_body_ratio() >= self.param['cs_m2_body_ratio']
-            con_04: bool = self._relative_size[-3] >= self.param['cs_m2_relative_size']
+            con_04: bool = self.scaler(self._cs_m2.cs_size()) >= self.param['cs_m2_relative_size']
             con_05: bool = self._cs_m1.type() == 'bearish'
             con_06: bool = self._cs_m1.cs_body_ratio() >= self.param['cs_m1_body_ratio']
-            con_07: bool = self._relative_size[-2] >= self.param['cs_m1_relative_size']
+            con_07: bool = self.scaler(self._cs_m1.cs_size()) >= self.param['cs_m1_relative_size']
             con_08: bool = self._cs.type() == 'bearish'
             con_09: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_10: bool = self._relative_size[-1] >= self.param['cs_relative_size']
+            con_10: bool = self.scaler(self._cs.cs_size()) >= self.param['cs_relative_size']
             if con_01 and con_02 and con_03 and con_04 and con_05 and con_06 and con_07 and con_08 and con_09 and con_10:
                 return True
             return False
 
     # Bearish Marubozu (19)
     class BearishMarubozu(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, param: dict):
-            super().__init__(param, 'BearishMarubozu', 'bearish', trend, [cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, param: dict):
+            super().__init__(param, scaler, 'BearishMarubozu', 'bearish', trend, [cs])
             self._cs = cs
             self.is_pattern = self._is_bearish_marubozu()
 
@@ -556,16 +466,15 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength >= self.param['trend_strength']
             con_02: bool = self._cs.type() == 'bearish'
             con_03: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_04: bool = self._relative_size[-1] >= self.param['cs_relative_size']
+            con_04: bool = self.scaler(self._cs.cs_size()) >= self.param['cs_relative_size']
             if con_01 and con_02 and con_03 and con_04:
                 return True
             return False
 
     # Three Inside Down (20)
     class ThreeInsideDown(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
-            super().__init__(param, 'ThreeInsideDown', 'bearish', trend, [cs_m2, cs_m1, cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, cs_m2: CandleStick, param: dict):
+            super().__init__(param, scaler, 'ThreeInsideDown', 'bearish', trend, [cs_m2, cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self._cs_m2 = cs_m2
@@ -581,12 +490,12 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength >= self.param['trend_strength']
             con_02: bool = self._cs_m2.type() == 'bullish'
             con_03: bool = self._cs_m2.cs_body_ratio() >= self.param['cs_m2_body_ratio']
-            con_04: bool = self._relative_size[-3] >= self.param['cs_m2_relative_size']
+            con_04: bool = self.scaler(self._cs_m2.cs_size()) >= self.param['cs_m2_relative_size']
             con_05: bool = self._cs_m1.type() == 'bearish'
             con_06: bool = self._cs_m1.open <= self._cs_m2.close
             con_07: bool = self._cs.type() == 'bearish'
             con_08: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_09: bool = self._relative_size[-1] >= self.param['cs_relative_size']
+            con_09: bool = self.scaler(self._cs.cs_size()) >= self.param['cs_relative_size']
             con_10: bool = self._cs.open >= self._cs_m1.close
             if con_01 and con_02 and con_03 and con_04 and con_05 and con_06 and con_07 and con_08 and con_09 and con_10:
                 return True
@@ -594,9 +503,8 @@ class CandleStickPattern:
 
     # BearishHarami (21)
     class BearishHarami(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, param: dict):
-            super().__init__(param, 'BearishHarami', 'bearish', trend, [cs_m1, cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, param: dict):
+            super().__init__(param, scaler, 'BearishHarami', 'bearish', trend, [cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self.is_pattern = self._is_bearish_harami()
@@ -611,10 +519,10 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength >= self.param['trend_strength']
             con_02: bool = self._cs_m1.type() == 'bullish'
             con_03: bool = self._cs_m1.cs_body_ratio() >= self.param['cs_m1_body_ratio']
-            con_04: bool = self._relative_size[-2] >= self.param['cs_m1_relative_size']
+            con_04: bool = self.scaler(self._cs_m1.cs_size()) >= self.param['cs_m1_relative_size']
             con_05: bool = self._cs.type() == 'bearish'
             con_06: bool = self._cs.cs_body_ratio() >= self.param['cs_body_ratio']
-            con_07: bool = self._relative_size[-1] <= self.param['cs_relative_size']
+            con_07: bool = self.scaler(self._cs.cs_size()) <= self.param['cs_relative_size']
             con_08: bool = self._cs.close >= self._cs_m1.open
             con_09: bool = self._cs.open <= self._cs_m1.close
             if con_01 and con_02 and con_03 and con_04 and con_05 and con_06 and con_07 and con_08 and con_09:
@@ -623,9 +531,8 @@ class CandleStickPattern:
 
     # Tweezer Top (22)
     class TweezerTop(PatternTemplate):
-        def __init__(self, trend: float, relative_size: list, cs: CandleStick, cs_m1: CandleStick, param: dict):
-            super().__init__(param, 'TweezerTop', 'bearish', trend, [cs_m1, cs])
-            self._relative_size = relative_size
+        def __init__(self, trend: float, scaler: any, cs: CandleStick, cs_m1: CandleStick, param: dict):
+            super().__init__(param, scaler, 'TweezerTop', 'bearish', trend, [cs_m1, cs])
             self._cs = cs
             self._cs_m1 = cs_m1
             self.is_pattern = self._is_tweezer_top()
@@ -640,7 +547,7 @@ class CandleStickPattern:
             con_01: bool = self.trend_strength >= self.param['trend_strength']
             con_02: bool = self._cs_m1.type() == 'bullish'
             con_03: bool = self._cs_m1.cs_body_ratio() >= self.param['cs_m1_body_ratio']
-            con_04: bool = self._relative_size[-2] >= self.param['cs_m1_relative_size']
+            con_04: bool = self.scaler(self._cs_m1.cs_size()) >= self.param['cs_m1_relative_size']
             con_05: bool = self._cs.type() == 'bearish'
             con_06: bool = self._cs.cs_body_ratio() <= self.param['cs_body_ratio']
             con_07: bool = self._cs.body_position() >= self.param['cs_body_position']
@@ -658,9 +565,9 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i, param['trend_window'])
             if is_boolean:
-                result.append(self.Hammer(trend, self.candle_stick_frame[i], param).is_pattern)
+                result.append(self.Hammer(trend, self._scaler, self.candle_stick_frame[i], param).is_pattern)
             else:
-                result.append(self.Hammer(trend, self.candle_stick_frame[i], param))
+                result.append(self.Hammer(trend, self._scaler, self.candle_stick_frame[i], param))
         return result
 
     # Piercing (2)
@@ -671,9 +578,9 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
             if is_boolean:
-                result.append(self.Piercing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
+                result.append(self.Piercing(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
-                result.append(self.Piercing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
+                result.append(self.Piercing(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
 
     # Bullish Engulfing (3)
@@ -684,9 +591,9 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
             if is_boolean:
-                result.append(self.BullishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
+                result.append(self.BullishEngulfing(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
-                result.append(self.BullishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
+                result.append(self.BullishEngulfing(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
 
     # Morning Star (4)
@@ -696,11 +603,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-2, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.MorningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
+                result.append(self.MorningStar(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
-                result.append(self.MorningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
+                result.append(self.MorningStar(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
 
     # Tree White Soldiers (5)
@@ -710,11 +616,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-2, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.ThreeWhiteSoldiers(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
+                result.append(self.ThreeWhiteSoldiers(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
-                result.append(self.ThreeWhiteSoldiers(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
+                result.append(self.ThreeWhiteSoldiers(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
 
     # Bullish Marubozu (6)
@@ -724,11 +629,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.BullishMarubozu(trend, relative_size, self.candle_stick_frame[i], param).is_pattern)
+                result.append(self.BullishMarubozu(trend, self._scaler, self.candle_stick_frame[i], param).is_pattern)
             else:
-                result.append(self.BullishMarubozu(trend, relative_size, self.candle_stick_frame[i], param))
+                result.append(self.BullishMarubozu(trend, self._scaler, self.candle_stick_frame[i], param))
         return result
 
     # Tree Inside Up (7)
@@ -738,11 +642,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-2, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.ThreeInsideUp(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
+                result.append(self.ThreeInsideUp(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
-                result.append(self.ThreeInsideUp(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
+                result.append(self.ThreeInsideUp(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
 
     # Bullish Harami (8)
@@ -752,11 +655,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.BullishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
+                result.append(self.BullishHarami(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
-                result.append(self.BullishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
+                result.append(self.BullishHarami(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
 
     # Tweezer Bottom (9)
@@ -766,11 +668,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.TweezerBottom(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
+                result.append(self.TweezerBottom(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
-                result.append(self.TweezerBottom(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
+                result.append(self.TweezerBottom(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
 
 
@@ -783,9 +684,9 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i, param['trend_window'])
             if is_boolean:
-                result.append(self.HangingMan(trend, self.candle_stick_frame[i], param).is_pattern)
+                result.append(self.HangingMan(trend, self._scaler, self.candle_stick_frame[i], param).is_pattern)
             else:
-                result.append(self.HangingMan(trend, self.candle_stick_frame[i], param))
+                result.append(self.HangingMan(trend, self._scaler, self.candle_stick_frame[i], param))
         return result
 
     # Dark Cloud Cover (15)
@@ -796,9 +697,9 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
             if is_boolean:
-                result.append(self.DarkCloud(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
+                result.append(self.DarkCloud(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
-                result.append(self.DarkCloud(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
+                result.append(self.DarkCloud(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
 
     # Bearish Engulfing (16)
@@ -809,9 +710,9 @@ class CandleStickPattern:
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
             if is_boolean:
-                result.append(self.BearishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
+                result.append(self.BearishEngulfing(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
-                result.append(self.BearishEngulfing(trend, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
+                result.append(self.BearishEngulfing(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
 
     # Evening Star (17)
@@ -821,11 +722,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.EveningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
+                result.append(self.EveningStar(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
-                result.append(self.EveningStar(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
+                result.append(self.EveningStar(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
 
     # Three Black Crows (18)
@@ -835,11 +735,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.ThreeBlackCrows(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
+                result.append(self.ThreeBlackCrows(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
-                result.append(self.ThreeBlackCrows(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
+                result.append(self.ThreeBlackCrows(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
 
     # Bearish Marubozu (19)
@@ -849,11 +748,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.BearishMarubozu(trend, relative_size, self.candle_stick_frame[i], param).is_pattern)
+                result.append(self.BearishMarubozu(trend, self._scaler, self.candle_stick_frame[i], param).is_pattern)
             else:
-                result.append(self.BearishMarubozu(trend, relative_size, self.candle_stick_frame[i], param))
+                result.append(self.BearishMarubozu(trend, self._scaler, self.candle_stick_frame[i], param))
         return result
 
     # Three Inside Down (20)
@@ -863,11 +761,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.ThreeInsideDown(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
+                result.append(self.ThreeInsideDown(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param).is_pattern)
             else:
-                result.append(self.ThreeInsideDown(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
+                result.append(self.ThreeInsideDown(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], self.candle_stick_frame[i-2], param))
         return result
 
     # Bearish Harami (21)
@@ -877,11 +774,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.BearishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
+                result.append(self.BearishHarami(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
-                result.append(self.BearishHarami(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
+                result.append(self.BearishHarami(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
 
     # Tweezer Top (22)
@@ -891,11 +787,10 @@ class CandleStickPattern:
         result = []
         for i in range(len(self.candle_stick_frame)):
             trend = self.trend(i-1, param['trend_window'])
-            relative_size = self.min_max_body(i, param['relative_size_window'])
             if is_boolean:
-                result.append(self.TweezerTop(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
+                result.append(self.TweezerTop(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param).is_pattern)
             else:
-                result.append(self.TweezerTop(trend, relative_size, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
+                result.append(self.TweezerTop(trend, self._scaler, self.candle_stick_frame[i], self.candle_stick_frame[i-1], param))
         return result
 
     def find(self, type: str = 'all', is_boolean: bool = False) -> pd.DataFrame:
@@ -912,9 +807,9 @@ class CandleStickPattern:
                 'hammer': self.is_hammer,
                 'piercing': self.is_piercing,
                 'bullish_engulfing': self.is_bullish_engulfing,
-                'mornin_star': self.is_morning_star,
+                'morning_star': self.is_morning_star,
                 'three_white_soldiers': self.is_three_white_soldiers,
-                'bullish_maru_bozu': self.is_bullish_marubozu,
+                'bullish_marubozu': self.is_bullish_marubozu,
                 'three_inside_up': self.is_three_inside_up,
                 'bullish_harami': self.is_bullish_harami,
                 'tweezer_bottom': self.is_tweezer_bottom,
@@ -947,3 +842,5 @@ class CandleStickPattern:
         result.columns = columns
         result.reset_index(drop=True, inplace=True)
         return result
+
+
