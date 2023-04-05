@@ -47,7 +47,7 @@ class Parameter:
             three_inside_up=dict(
                 trend_window=10,
                 relative_size_window=11,
-                trend_strength=0.00,
+                trend_strength=-0.00,
                 cs_m2_body_ratio=0.50,
                 cs_body_ratio=0.50,
                 cs_m2_relative_size=0.30,
@@ -56,7 +56,7 @@ class Parameter:
             bullish_harami=dict(
                 trend_window=10,
                 relative_size_window=11,
-                trend_strength=0.00,
+                trend_strength=-0.00,
                 cs_m1_body_ratio=0.50,
                 cs_body_ratio=0.50,
                 cs_m1_relative_size=0.30,
@@ -65,7 +65,7 @@ class Parameter:
             tweezer_bottom=dict(
                 trend_window=10,
                 relative_size_window=11,
-                trend_strength=0.00,
+                trend_strength=-0.00,
                 cs_m1_body_ratio=0.50,
                 cs_body_ratio=0.50,
                 cs_m1_relative_size=0.30,

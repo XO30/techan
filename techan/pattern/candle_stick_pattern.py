@@ -133,11 +133,11 @@ class CandleStickPattern:
             return None
         trend, sum = 0, 0
         for cs in cs_window:
-            sum += cs.cs_size()
+            sum += cs.body_size()
             if cs.type() == 'bullish':
-                trend += cs.cs_size()
+                trend += cs.body_size()
             elif cs.type() == 'bearish':
-                trend -= cs.cs_size()
+                trend -= cs.body_size()
         # weighted average of the trend
         return trend / sum
 
@@ -152,6 +152,8 @@ class CandleStickPattern:
             self.is_valid = None
             self.sl = None
             self.tp = None
+            self.wl_ratio = None
+            self.v_iv_after = None
 
         def __str__(self):
             return f'{self.pattern_name} -> ({self.is_pattern})'
