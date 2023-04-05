@@ -18,7 +18,6 @@ class Parameter:
             ),
             morning_star=dict(
                 trend_window=10,  # len of trend window [1, inf]
-                relative_size_window=11,  # len of relative size window [1, inf]
                 trend_strength=-0.00,  # to be valid trend must be less than this value [-1, 0]
                 cs_body_ratio=0.50,  # to be valid body must be greater than this value compared to the cs [0, 1]
                 cs_m1_body_ratio=0.50,  # to be valid body must be less than this value compared to the cs [0, 1]
@@ -28,7 +27,6 @@ class Parameter:
             ),
             three_white_soldiers=dict(
                 trend_window=10,  # len of trend window [1, inf]
-                relative_size_window=11,  # len of relative size window [1, inf]
                 trend_strength=-0.00,  # to be valid trend must be less than this value [-1, 0]
                 cs_relative_size=0.25,  # to be valid relative size must be greater than this value [0, 1]
                 cs_m1_relative_size=0.25,  # to be valid relative size must be greater than this value [0, 1]
@@ -39,14 +37,12 @@ class Parameter:
             ),
             bullish_marubozu=dict(
                 trend_window=10,  # len of trend window [1, inf]
-                relative_size_window=11,  # len of relative size window [1, inf]
                 trend_strength=-0.00,  # to be valid trend must be less than this value [-1, 0]
                 cs_relative_size=0.80,  # to be valid relative size must be greater than this value [0, 1]
                 cs_body_ratio=0.80,  # to be valid body must be greater than this value compared to the cs [0, 1]
             ),
             three_inside_up=dict(
                 trend_window=10,
-                relative_size_window=11,
                 trend_strength=-0.00,
                 cs_m2_body_ratio=0.50,
                 cs_body_ratio=0.50,
@@ -55,7 +51,6 @@ class Parameter:
             ),
             bullish_harami=dict(
                 trend_window=10,
-                relative_size_window=11,
                 trend_strength=-0.00,
                 cs_m1_body_ratio=0.50,
                 cs_body_ratio=0.50,
@@ -64,7 +59,6 @@ class Parameter:
             ),
             tweezer_bottom=dict(
                 trend_window=10,
-                relative_size_window=11,
                 trend_strength=-0.00,
                 cs_m1_body_ratio=0.50,
                 cs_body_ratio=0.50,
@@ -90,7 +84,6 @@ class Parameter:
             ),
             evening_star=dict(
                 trend_window=10,  # len of trend window [1, inf]
-                relative_size_window=11,  # len of relative size window [1, inf]
                 trend_strength=0.00,  # to be valid trend must be greater than this value [0, 1]
                 cs_body_ratio=0.50,  # to be valid body must be greater than this value compared to the cs [0, 1]
                 cs_m1_body_ratio=0.50,  # to be valid body must be less than this value compared to the cs [0, 1]
@@ -100,7 +93,6 @@ class Parameter:
             ),
             three_black_crows=dict(
                 trend_window=10,  # len of trend window [1, inf]
-                relative_size_window=11,  # len of relative size window [1, inf]
                 trend_strength=-0.00,  # to be valid trend must be less than this value [-1, 0]
                 cs_relative_size=0.25,  # to be valid relative size must be greater than this value [0, 1]
                 cs_m1_relative_size=0.25,  # to be valid relative size must be greater than this value [0, 1]
@@ -111,14 +103,12 @@ class Parameter:
             ),
             bearish_marubozu=dict(
                 trend_window=10,  # len of trend window [1, inf]
-                relative_size_window=11,  # len of relative size window [1, inf]
                 trend_strength=0.00,  # to be valid trend must be greater than this value [0, 1]
                 cs_relative_size=0.80,  # to be valid relative size must be greater than this value [0, 1]
                 cs_body_ratio=0.80,  # to be valid body must be greater than this value compared to the cs [0, 1]
             ),
             three_inside_down=dict(
                 trend_window=10,
-                relative_size_window=11,
                 trend_strength=0.00,
                 cs_m2_body_ratio=0.50,
                 cs_body_ratio=0.50,
@@ -127,7 +117,6 @@ class Parameter:
             ),
             bearish_harami=dict(
                 trend_window=10,
-                relative_size_window=11,
                 trend_strength=0.00,
                 cs_m1_body_ratio=0.50,
                 cs_body_ratio=0.50,
@@ -136,7 +125,6 @@ class Parameter:
             ),
             tweezer_top=dict(
                 trend_window=10,
-                relative_size_window=11,
                 trend_strength=0.00,
                 cs_m1_body_ratio=0.50,
                 cs_body_ratio=0.50,
@@ -145,3 +133,4 @@ class Parameter:
             )
         ),
     )
+
