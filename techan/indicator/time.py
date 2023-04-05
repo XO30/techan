@@ -71,23 +71,23 @@ class Time:
 
     def transform_hour(self) -> pd.DataFrame:
         self._transform(self.df_date_time['Hour'], 'Hour')
-        return self.df_date_time[['Sine_Hour', 'Cosine_Hour']]
+        return self.df_date_time[['Sine_Hour', 'Cosine_Hour']].reset_index(drop=True)
 
     def transform_minute(self) -> pd.DataFrame:
         self._transform(self.df_date_time['Minute'], 'Minute')
-        return self.df_date_time[['Sine_Minute', 'Cosine_Minute']]
+        return self.df_date_time[['Sine_Minute', 'Cosine_Minute']].reset_index(drop=True)
 
     def transform_day(self) -> pd.DataFrame:
         self._transform(self.df_date_time['Day'], 'Day')
-        return self.df_date_time[['Sine_Day', 'Cosine_Day']]
+        return self.df_date_time[['Sine_Day', 'Cosine_Day']].reset_index(drop=True)
 
     def transform_month(self) -> pd.DataFrame:
         self._transform(self.df_date_time['Month'], 'Month')
-        return self.df_date_time[['Sine_Month', 'Cosine_Month']]
+        return self.df_date_time[['Sine_Month', 'Cosine_Month']].reset_index(drop=True)
 
     def transform_year(self) -> pd.DataFrame:
         self._transform(self.df_date_time['Year'], 'Year')
-        return self.df_date_time[['Sine_Year', 'Cosine_Year']]
+        return self.df_date_time[['Sine_Year', 'Cosine_Year']].reset_index(drop=True)
 
     def transform_all(self) -> pd.DataFrame:
-        return pd.concat([self.transform_hour(), self.transform_minute(), self.transform_day(), self.transform_month(), self.transform_year()])
+        return pd.concat([self.transform_minute(), self.transform_hour(), self.transform_day(), self.transform_month(), self.transform_year()], axis=1)
