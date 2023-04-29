@@ -5,13 +5,23 @@ from datetime import datetime
 
 # noinspection PyPropertyDefinition
 class CandleStick:
-    def __init__(self, date_time: str, open: float, high: float, low: float, close: float, volume: int or None = None):
+    def __init__(
+            self,
+            date_time: str,
+            open: float,
+            high: float,
+            low: float,
+            close: float,
+            volume: int or None = None,
+            spread: int or None = None
+    ):
         self.open: float = open
         self.high: float = high
         self.low: float = low
         self.close: float = close
         self.date_time: str = date_time
         self.volume: int or None = volume
+        self.spread: int or None = spread
         self._validate_candle()
 
     def __repr__(self):
@@ -67,6 +77,14 @@ class CandleStick:
         :return: int: Volume
         """
         return self._volume
+
+    @property
+    def spread(self) -> int or None:
+        """
+        forwards the spread of the candlestick
+        :return: int: spread
+        """
+        return self._spread
 
     @date_time.setter
     def date_time(self, value: str) -> None:
@@ -149,6 +167,21 @@ class CandleStick:
             if value < 0:
                 raise ValueError("volume must be positive")
         self._volume: int or None = value
+        return None
+
+    @spread.setter
+    def spread(self, value: int) -> None:
+        """
+        method to validate the spread
+        :param value: int: spread
+        :return: None
+        """
+        if not isinstance(value, (int, float, type(None))):
+            raise TypeError("spread must be int, float or NoneType not {}".format(type(value)))
+        if value is not None:
+            if value < 0:
+                raise ValueError("spread must be positive")
+        self._spread: int or None = value
         return None
 
     def _validate_candle(self) -> None:

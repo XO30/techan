@@ -7,11 +7,36 @@ import plotly.graph_objects as go
 
 
 class CandleStickFrame:
-    def __init__(self, date_time: list, open: list, high: list, low: list, close: list, volume: list or None = None):
-        date_time, open, high, low, close, volume = self._validate_input(date_time, open, high, low, close, volume)
-        self.candle_sticks = [CandleStick(dt, o, h, l, c, v) for dt, o, h, l, c, v in
-                              zip(date_time, open, high, low, close, volume)]
-        self.df: pd.DataFrame = pd.DataFrame({"date_time": date_time, "open": open, "high": high, "low": low, "close": close, "volume": volume})
+    def __init__(
+            self,
+            date_time: list,
+            open: list,
+            high: list,
+            low: list,
+            close: list,
+            volume: list or None = None,
+            spread: list or None = None
+    ):
+        date_time, open, high, low, close, volume, spread = self._validate_input(
+            date_time,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            spread
+        )
+        self.candle_sticks = [CandleStick(dt, o, h, l, c, v, s) for dt, o, h, l, c, v, s in
+                              zip(date_time, open, high, low, close, volume, spread)]
+        self.df: pd.DataFrame = pd.DataFrame({
+            "date_time": date_time,
+            "open": open,
+            "high": high,
+            "low": low,
+            "close": close,
+            "volume": volume,
+            "spread": spread
+        })
         self._bullish_count, self._bearish_count, self._doji_count = self._type_count()
 
     def __repr__(self):
@@ -33,7 +58,15 @@ class CandleStickFrame:
         return reversed(self.candle_sticks)
 
     @staticmethod
-    def _validate_input(date_time: list, open: list, high: list, low: list, close: list, volume: list or None) -> tuple:
+    def _validate_input(
+            date_time: list,
+            open: list,
+            high: list,
+            low: list,
+            close: list,
+            volume: list or None,
+            spread: list or None
+    ) -> tuple:
         """
         method to validate the input
         :param date_time: list, np.ndarray, or pd.Series of date_time of the candlesticks
@@ -42,6 +75,7 @@ class CandleStickFrame:
         :param low: list, np.ndarray, or pd.pd.Series of low of the candlesticks
         :param close: list, np.ndarray, or pd.Series of close of the candlesticks
         :param volume: list, np.ndarray, or pd.Series of volume of the candlesticks or None
+        :param spread: list, np.ndarray, or pd.Series of spread of the candlesticks or None
         :return: tuple: date_time, open, high, low, close, volume
         """
         if not isinstance(date_time, (list, np.ndarray, pd.Series)):
@@ -62,6 +96,7 @@ class CandleStickFrame:
         low = list(low)
         close = list(close)
         volume = list(volume) if volume is not None else [None] * len(date_time)
+        spread = list(spread) if spread is not None else [None] * len(date_time)
         if len(date_time) != len(open) != len(high) or len(open) != len(low) or len(open) != len(close):
             raise ValueError("date_time, open, high, low, and close must be the same length")
         if not all(isinstance(x, (str, datetime)) for x in date_time):
@@ -76,7 +111,9 @@ class CandleStickFrame:
             raise TypeError("close must be list of int or float not {}".format(type(close)))
         if not all(isinstance(x, (int, float, type(None))) for x in volume):
             raise TypeError("volume must be list of int, float or None not {}".format(type(volume)))
-        return date_time, open, high, low, close, volume
+        if not all(isinstance(x, (int, float, type(None))) for x in spread):
+            raise TypeError("spread must be list of int, float or None not {}".format(type(spread)))
+        return date_time, open, high, low, close, volume, spread
 
     def _type_count(self) -> tuple:
         """

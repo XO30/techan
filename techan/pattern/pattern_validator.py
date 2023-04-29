@@ -83,8 +83,7 @@ class PatternValidator:
             for pattern in self.pattern_df.columns:
                 if self.pattern_df.loc[index, pattern].is_pattern:
                     past_high, past_low = self._get_past_high_low(index)
-                    #future_window = self._get_future_window(index)
-                    if past_high is not None and past_low is not None: # and future_window is not None
+                    if past_high is not None and past_low is not None:
                         self.validation_df.loc[index, pattern] = self._validate(self.pattern_df.loc[index, pattern], past_high, past_low, index)
                     else:
                         self.validation_df.loc[index, pattern] = None
