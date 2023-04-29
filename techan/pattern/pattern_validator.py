@@ -24,7 +24,7 @@ class PatternValidator:
         cs_pattern.wl_ratio = wl_ratio
         cs_pattern.v_iv_after = v_iv_after
 
-    def _validate(self, cs_pattern: any, past_high: float, past_low: float, index: int) -> bool or None:
+    def _validate_hl(self, cs_pattern: any, past_high: float, past_low: float, index: int) -> bool or None:
         is_valid: bool = False
         is_invalid: bool = False
         if cs_pattern.pattern_type == 'bullish':
@@ -77,6 +77,9 @@ class PatternValidator:
             cs_pattern.is_valid = None
             return False  # tbd, trend continuation pattern
 
+    def _validate_atr(self, cs_pattern: any, past_high: float, past_low: float, index: int) -> bool or None:
+        pass
+
 
     def validate(self) -> pd.DataFrame:
         for index, row in tqdm(self.pattern_df.iterrows(), total=self.pattern_df.shape[0], desc='Validating Candle Stick Pattern'):
@@ -84,7 +87,7 @@ class PatternValidator:
                 if self.pattern_df.loc[index, pattern].is_pattern:
                     past_high, past_low = self._get_past_high_low(index)
                     if past_high is not None and past_low is not None:
-                        self.validation_df.loc[index, pattern] = self._validate(self.pattern_df.loc[index, pattern], past_high, past_low, index)
+                        self.validation_df.loc[index, pattern] = self._validate_hl(self.pattern_df.loc[index, pattern], past_high, past_low, index)
                     else:
                         self.validation_df.loc[index, pattern] = None
                 else:

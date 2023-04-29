@@ -1,5 +1,5 @@
 class Parameter:
-    candle_stick_pattern = dict(
+    candle_stick_pattern: dict = dict(
         bullish=dict(
             hammer=dict(
                 trend_window=10,  # len of trend window [1, inf]
