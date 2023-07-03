@@ -20,6 +20,11 @@ class PatternValidator:
         self.wl_ratio: float = wl_ratio  # stop loss ratio
 
     def _get_past_high_low(self, index: int) -> (float, float) or (None, None):
+        """
+        method to return the highest high and lowest low in the past window
+        :param index: int: index of the candle stick to be validated
+        :return: (float, float) or (None, None): highest high and lowest low in the past window
+        """
         window: list or None = self.candle_stick_frame[index-self.past_window+1:index+1] if index > self.past_window else None
         if window is not None:
             return max(candle_stick.high for candle_stick in window), min(candle_stick.low for candle_stick in window)
@@ -27,6 +32,16 @@ class PatternValidator:
             return None, None
 
     def _set_stats(self, cs_pattern: any, is_valid: bool or None, tp: float, sl: float, wl_ratio: float, v_iv_after: int or None) -> None:
+        """
+        method to sets the stats of the pattern
+        :param cs_pattern: CandleStickPattern: candle stick pattern to be validated
+        :param is_valid: bool: whether the pattern is valid or not
+        :param tp: float: take profit
+        :param sl: float: stop loss
+        :param wl_ratio: float: win loss ratio
+        :param v_iv_after: int: number of candles after which the pattern is validated
+        :return: None
+        """
         cs_pattern.is_valid = is_valid
         cs_pattern.tp = tp
         cs_pattern.sl = sl
@@ -34,16 +49,24 @@ class PatternValidator:
         cs_pattern.v_iv_after = v_iv_after
 
     def _validate_hl(self, cs_pattern: any, past_high: float, past_low: float, index: int) -> bool or None:
+        """
+        method to validate the pattern using the high low method
+        :param cs_pattern: CandleStickPattern: candle stick pattern to be validated
+        :param past_high: float: highest high in the past window
+        :param past_low: float: lowest low in the past window
+        :param index: int: index of the candle stick to be validated
+        :return: bool or None: whether the pattern is valid or not
+        """
         is_valid: bool = False
         is_invalid: bool = False
         if cs_pattern.pattern_type == 'bullish':
-            p_loss = cs_pattern.pattern[-1].close - past_low
-            p_win = past_high - cs_pattern.pattern[-1].close
+            p_loss: float = cs_pattern.pattern[-1].close - past_low
+            p_win: float = past_high - cs_pattern.pattern[-1].close
             if p_loss >= p_win:
-                past_high = cs_pattern.pattern[-1].close + p_loss * self.wl_ratio
+                past_high: float = cs_pattern.pattern[-1].close + p_loss * self.wl_ratio
             else:
-                past_low = cs_pattern.pattern[-1].close - p_win / self.wl_ratio
-            wl_ratio = (past_high - cs_pattern.pattern[-1].close) / (cs_pattern.pattern[-1].close - past_low)
+                past_low: float = cs_pattern.pattern[-1].close - p_win / self.wl_ratio
+            wl_ratio: float = (past_high - cs_pattern.pattern[-1].close) / (cs_pattern.pattern[-1].close - past_low)
             while is_valid is False and is_invalid is False:
                 index += 1
                 if index >= len(self.candle_stick_frame):
@@ -60,13 +83,13 @@ class PatternValidator:
                 self._set_stats(cs_pattern, False, past_high, past_low, wl_ratio, index)
                 return False
         elif cs_pattern.pattern_type == 'bearish':
-            p_loss = past_high - cs_pattern.pattern[-1].close
-            p_win = cs_pattern.pattern[-1].close - past_low
+            p_loss: float = past_high - cs_pattern.pattern[-1].close
+            p_win: float = cs_pattern.pattern[-1].close - past_low
             if p_loss >= p_win:
-                past_low = cs_pattern.pattern[-1].close - p_loss * self.wl_ratio
+                past_low: float = cs_pattern.pattern[-1].close - p_loss * self.wl_ratio
             else:
-                past_high = cs_pattern.pattern[-1].close + p_win / self.wl_ratio
-            wl_ratio = (cs_pattern.pattern[-1].close - past_low) / (past_high - cs_pattern.pattern[-1].close)
+                past_high: float = cs_pattern.pattern[-1].close + p_win / self.wl_ratio
+            wl_ratio: float = (cs_pattern.pattern[-1].close - past_low) / (past_high - cs_pattern.pattern[-1].close)
             while is_valid is False and is_invalid is False:
                 index += 1
                 if index >= len(self.candle_stick_frame):
@@ -87,12 +110,19 @@ class PatternValidator:
             return False  # tbd, trend continuation pattern
 
     def _validate_atr(self, cs_pattern: any, index: int, atr: float) -> bool or None:
+        """
+        method to validate the pattern using the atr method
+        :param cs_pattern: CandleStickPattern: candle stick pattern to be validated
+        :param index: int: index of the candle stick to be validated
+        :param atr: float: average true range
+        :return: bool or None: whether the pattern is valid or not
+        """
         if cs_pattern.pattern_type == 'bullish':
-            last_low = cs_pattern.pattern[-1].close - atr
-            last_high = cs_pattern.pattern[-1].close + atr * self.wl_ratio
+            last_low: float = cs_pattern.pattern[-1].close - atr
+            last_high: float = cs_pattern.pattern[-1].close + atr * self.wl_ratio
         elif cs_pattern.pattern_type == 'bearish':
-            last_low = cs_pattern.pattern[-1].close - atr * self.wl_ratio
-            last_high = cs_pattern.pattern[-1].close + atr
+            last_low: float = cs_pattern.pattern[-1].close - atr * self.wl_ratio
+            last_high: float = cs_pattern.pattern[-1].close + atr
         else:
             cs_pattern.is_valid = None
             return False  # tbd, trend continuation pattern
@@ -100,6 +130,10 @@ class PatternValidator:
 
 
     def validate(self) -> pd.DataFrame:
+        """
+        method to validate the candle stick pattern
+        :return: pd.DataFrame: validation dataframe
+        """
         atr_obj = ATR(self.candle_stick_frame, self.past_window)
         for index, row in tqdm(self.pattern_df.iterrows(), total=self.pattern_df.shape[0], desc='Validating Candle Stick Pattern'):
             for pattern in self.pattern_df.columns:
